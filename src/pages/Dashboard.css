@@ -1,0 +1,491 @@
+/* src/pages/Dashboard.css */
+
+/* --- Layout & Backgrounds (Matches Login) --- */
+.dashboard-container {
+    position: relative;
+    min-height: 100vh;
+    padding: 24px;
+    background-color: rgb(15, 23, 42); /* Fallback */
+    overflow-x: hidden;
+  }
+  
+  .dashboard-background {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgb(15, 23, 42) 0%,
+      rgb(30, 58, 138) 50%,
+      rgb(15, 23, 42) 100%
+    );
+    z-index: 0;
+  }
+  
+  .dashboard-blur-left {
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: rgba(59, 130, 246, 0.15);
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+  }
+  
+  .dashboard-blur-right {
+    position: fixed;
+    bottom: -10%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: rgba(34, 211, 238, 0.15);
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+  }
+  
+  .dashboard-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  /* --- Header --- */
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 16px 24px;
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(71, 85, 105, 0.5);
+  }
+  
+  .dashboard-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+  }
+  
+  .dashboard-subtitle {
+    color: rgb(148, 163, 184);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  
+  .logout-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: rgb(252, 165, 165);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  
+  .logout-button:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: white;
+  }
+  
+  /* --- Table Card --- */
+  .table-card {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(24px);
+    border-radius: 24px;
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    overflow: hidden; /* Clips the table corners */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: rgb(226, 232, 240);
+  }
+  
+  .glass-table th {
+    background: rgba(15, 23, 42, 0.6);
+    padding: 16px;
+    text-align: left;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgb(148, 163, 184);
+    border-bottom: 1px solid rgba(71, 85, 105, 0.5);
+    white-space: nowrap;
+  }
+  
+  .glass-table td {
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+    vertical-align: top;
+    font-size: 14px;
+  }
+  
+  .glass-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .glass-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  /* --- Specific Column Styles --- */
+  .query-cell {
+    min-width: 250px;
+  }
+  .query-title {
+    font-weight: 600;
+    color: white;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .query-desc {
+    color: rgb(148, 163, 184);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  
+  .link-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: rgba(59, 130, 246, 0.15);
+    color: rgb(96, 165, 250);
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .link-badge:hover {
+    background: rgba(59, 130, 246, 0.25);
+  }
+  
+  .proposal-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: rgb(203, 213, 225);
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  
+  .proposal-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgb(148, 163, 184);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  
+  /* --- Inputs & Selects (Matching Login) --- */
+  .dashboard-input, .dashboard-select {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgb(71, 85, 105);
+    color: white;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  
+  .dashboard-input:focus, .dashboard-select:focus {
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+  
+  .dashboard-select option {
+    background-color: rgb(15, 23, 42);
+    color: white;
+  }
+  
+  /* --- Action Button --- */
+  .save-button {
+    width: 100%;
+    background: rgb(37, 99, 235);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+  }
+  
+  .save-button:hover:not(:disabled) {
+    background: rgb(29, 78, 216);
+    transform: translateY(-1px);
+  }
+  
+  .save-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgb(71, 85, 105);
+    box-shadow: none;
+  }
+  
+  /* Custom Scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.8);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 1);
+  }
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.link-button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* --- Proposal Buttons --- */
+.proposal-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  color: rgb(203, 213, 225);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.proposal-btn:hover {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgb(96, 165, 250);
+  color: white;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: rgb(30, 41, 59);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  color: rgb(203, 213, 225);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap; /* Preserves spacing in proposal text */
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgb(37, 99, 235);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: rgb(29, 78, 216);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.toolbar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.search-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgb(148, 163, 184);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  padding: 12px 16px 12px 40px; /* Left padding for icon */
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: rgb(59, 130, 246);
+  background: rgba(30, 41, 59, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.filter-wrapper {
+  position: relative;
+  width: 200px;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgb(148, 163, 184);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filter-select {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  padding: 12px 16px 12px 40px;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  appearance: none; /* Removes default arrow */
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgb(148, 163, 184)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: rgb(59, 130, 246);
+  background-color: rgba(30, 41, 59, 0.8);
+}
+
+.filter-select option {
+  background-color: rgb(15, 23, 42);
+  color: white;
+}
