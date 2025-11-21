@@ -47,12 +47,11 @@ const Dashboard = () => {
         id: item.id,
         title: item.title,
         description: item.description,
-        link: item.url, // Mapping 'url' to 'link'
-        proposal_v1: item.proposal_1, // Mapping 'proposal_1'
-        proposal_v2: item.proposal_2, // Mapping 'proposal_2'
-        proposal_v3: item.proposal_3, // Handle v3 if exists
-        // Fallback to current time if created_at is missing in the specific JSON you provided
-        created_at: item.createdDateTime, 
+        link: item.url, 
+        proposal_v1: item.proposal_1, 
+        proposal_v2: item.proposal_2, 
+        proposal_v3: item.proposal_3, 
+        created_at: item.created_date_time, 
         comments: item.comments || '',
         applied: item.applied || 'no'
       }));
@@ -80,7 +79,17 @@ const Dashboard = () => {
       const rowDate = new Date(row.created_at);
       const now = new Date();
       
-      if (timeFilter === '24h') {
+      if (timeFilter === '1h') {
+        matchesTime = rowDate >= subHours(now, 1);
+      } else if (timeFilter === '3h') {
+        matchesTime = rowDate >= subHours(now, 3);
+      } else if (timeFilter === '6h') {
+        matchesTime = rowDate >= subHours(now, 6);
+      }
+      else if (timeFilter === '12h') {
+        matchesTime = rowDate >= subHours(now, 12);
+      }
+      else if (timeFilter === '24h') {
         matchesTime = rowDate >= subHours(now, 24);
       } else if (timeFilter === '7d') {
         matchesTime = rowDate >= subDays(now, 7);
@@ -198,6 +207,10 @@ const Dashboard = () => {
               onChange={(e) => setTimeFilter(e.target.value)}
             >
               <option value="all">All Time</option>
+              <option value="1h">Last 1 Hour</option>
+              <option value="3h">Last 3 Hours</option>
+              <option value="6h">Last 6 Hours</option>
+              <option value="12h">Last 12 Hours</option>
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
