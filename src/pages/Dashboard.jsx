@@ -4,18 +4,17 @@ import { apiService } from '../services/api';
 import { formatDistanceToNow, subDays, subHours } from 'date-fns';
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
-  Copy, X, Eye, Search, Filter, CheckCircle, 
+  Copy, X, Search, Filter, CheckCircle, 
   LayoutTemplate, Loader2, AlertCircle, Check, 
-  Pencil, Maximize2 
+  Pencil, Maximize2, Eye
 } from 'lucide-react';
 import './Dashboard.css';
 
-// --- OPTIMIZED ROW COMPONENT ---
+// --- ROW COMPONENT ---
 const ProposalRow = React.memo(({ 
   row, 
   activeRowId, 
   savingMap, 
-  onOpenModal, 
   onOpenPanel, 
   onInputChange, 
   onSave 
@@ -27,11 +26,16 @@ const ProposalRow = React.memo(({
   };
 
   return (
-    <tr className={activeRowId === row.id ? 'active-row' : ''}>
+    <tr 
+      className={activeRowId === row.id ? 'active-row' : ''}
+      onClick={() => onOpenPanel(row)} // CLICKING ROW OPENS SIDE PANEL
+      style={{ cursor: 'pointer' }}
+    >
       
-      {/* QUERY COLUMN */}
+      {/* QUERY COLUMN (Merged: Time + Title Link + Description) */}
       <td className="query-cell">
         <div className="table-item">
+           {/* Time */}
            <div style={{
              fontSize: '11px', color: '#94a3b8', fontWeight: '600', 
              textTransform: 'uppercase', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px'
@@ -39,11 +43,14 @@ const ProposalRow = React.memo(({
               <Clock size={10} /> {formatTime(row.created_at)}
            </div>
 
+           {/* Title (Link) */}
            <div style={{marginBottom: '6px'}}>
              {row.link ? (
                 <a 
                   href={row.link} target="_blank" rel="noreferrer" 
                   style={{color: '#0f172a', fontWeight: '600', fontSize: '15px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+                  className="hover-link"
+                  onClick={(e) => e.stopPropagation()} // Prevent opening panel when clicking link
                   onMouseEnter={(e) => e.target.style.color = '#2563eb'}
                   onMouseLeave={(e) => e.target.style.color = '#0f172a'}
                 >
@@ -54,46 +61,24 @@ const ProposalRow = React.memo(({
              )}
            </div>
 
-           <div 
-             className="item-desc" 
-             onClick={() => onOpenModal(row.id, row.title, row.description, false)}
-             style={{cursor: 'pointer'}}
-             title="Click to view full description"
-           >
+           {/* Description */}
+           <div className="item-desc" title="Click row to view details">
               {row.description}
            </div>
         </div>
       </td>
 
-      {/* PROPOSAL COLUMN */}
+      {/* PROPOSAL COLUMN (Preview Only) */}
       <td>
         {row.proposal ? (
           <div className="table-item">
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 4}}>
-              <span className="item-title" style={{fontSize: '11px', color: '#64748b', textTransform: 'uppercase'}}>
+            <div style={{display:'flex', alignItems:'center', gap: 6, marginBottom: 4}}>
+              <span className="item-title" style={{fontSize: '11px', color: '#64748b', textTransform: 'uppercase', margin: 0}}>
                 Preview
               </span>
-              <div style={{display:'flex', gap: 8}}>
-                <button 
-                  onClick={() => onOpenModal(row.id, 'Generated Proposal', row.proposal, true, false)}
-                  style={{border:'none', background:'transparent', cursor:'pointer', padding:0}}
-                  title="View Full"
-                >
-                  <Eye size={14} color="#94a3b8"/>
-                </button>
-                <button 
-                  onClick={() => onOpenModal(row.id, 'Edit Proposal', row.proposal, true, true)} 
-                  style={{border:'none', background:'transparent', cursor:'pointer', padding:0}}
-                  title="Edit & Copy to Feedback"
-                >
-                  <Pencil size={14} color="#2563eb"/>
-                </button>
-              </div>
+              <Eye size={12} color="#94a3b8"/>
             </div>
-            <div 
-              className="item-desc" 
-              onClick={() => onOpenModal(row.id, 'Generated Proposal', row.proposal, true, false)}
-            >
+            <div className="item-desc">
               {row.proposal}
             </div>
           </div>
@@ -104,8 +89,8 @@ const ProposalRow = React.memo(({
         )}
       </td>
 
-      {/* FEEDBACK COLUMN */}
-      <td>
+      {/* FEEDBACK COLUMN (Stop Propagation) */}
+      <td onClick={(e) => e.stopPropagation()}>
         <textarea 
           value={row.comments || ''} 
           onChange={(e) => onInputChange(row.id, 'comments', e.target.value)} 
@@ -116,8 +101,8 @@ const ProposalRow = React.memo(({
         />
       </td>
 
-      {/* APPLIED COLUMN */}
-      <td>
+      {/* APPLIED COLUMN (Stop Propagation) */}
+      <td onClick={(e) => e.stopPropagation()}>
         <select 
           value={row.applied || 'no'} 
           onChange={(e) => onInputChange(row.id, 'applied', e.target.value)} 
@@ -128,25 +113,19 @@ const ProposalRow = React.memo(({
         </select>
       </td>
 
-      {/* ACTIONS COLUMN */}
-      <td>
+      {/* ACTIONS COLUMN (Stop Propagation) */}
+      <td onClick={(e) => e.stopPropagation()}>
         <div className="action-buttons">
           <button onClick={() => onSave(row)} disabled={savingMap[row.id]} className="save-button">
             {savingMap[row.id] ? '...' : <><Save size={16} /> Save</>}
           </button>
-          
-          {row.proposal && (
-            <button className="compare-btn" onClick={() => onOpenPanel(row)}>
-              <LayoutTemplate size={14} /> Review
-            </button>
-          )}
         </div>
       </td>
     </tr>
   );
 });
 
-// --- MAIN COMPONENT ---
+// --- MAIN DASHBOARD ---
 const Dashboard = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -162,12 +141,6 @@ const Dashboard = () => {
   // Panel Edit State
   const [panelEditMode, setPanelEditMode] = useState(false);
   const [panelText, setPanelText] = useState('');
-
-  // Modal State
-  const [modal, setModal] = useState({ 
-    open: false, rowId: null, title: '', content: '', showCopy: false, isEditing: false 
-  });
-  const [editedContent, setEditedContent] = useState('');
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -212,9 +185,10 @@ const Dashboard = () => {
       const now = new Date();
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
-        else if(timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
+        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
         else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6);
         else if (timeFilter === '12h') matchesTime = rowDate >= subHours(now, 12);
+        else if (timeFilter === '18h') matchesTime = rowDate >= subHours(now, 18);
         else if (timeFilter === '24h') matchesTime = rowDate >= subHours(now, 24);
         else if (timeFilter === '7d') matchesTime = rowDate >= subDays(now, 7);
       }
@@ -238,48 +212,29 @@ const Dashboard = () => {
     }
   }, []);
 
-  // --- MODAL LOGIC ---
-  const openModal = useCallback((rowId, title, content, showCopy = false, isEditing = false) => {
-    setModal({ open: true, rowId, title, content, showCopy, isEditing });
-    setEditedContent(content);
-  }, []);
-
-  const saveEditedContentToFeedback = () => {
-    if (modal.rowId) {
-      // Updates BOTH feedback and the proposal text in the table
-      setData(prevData => prevData.map(row => 
-        row.id === modal.rowId 
-          ? { ...row, comments: editedContent, proposal: editedContent } 
-          : row
-      ));
-      triggerToast('Updated Feedback & Proposal View!', 'success');
-      setModal(prev => ({ ...prev, open: false }));
-    }
-  };
-
-  // --- SIDE PANEL LOGIC ---
+  // --- SIDE PANEL HANDLERS ---
   const handleOpenPanel = useCallback((row) => {
     setSelectedRow(row);
     setViewMode('split'); 
     setPanelOpen(true);
     setPanelEditMode(false);
-    setPanelText(row.proposal || '');
+    // Use existing comments if available, else original proposal
+    setPanelText(row.comments || row.proposal || '');
   }, []);
 
-  // FIX: Updates both Data and SelectedRow state so panel reflects changes instantly
   const handlePanelSave = () => {
     if (selectedRow) {
-      // 1. Update Global Data (Table)
+      // 1. Update Global Data State
       setData(prevData => prevData.map(row => 
         row.id === selectedRow.id 
           ? { ...row, comments: panelText, proposal: panelText } 
           : row
       ));
 
-      // 2. Update Local Panel State (Panel View)
+      // 2. Update Local Panel State
       setSelectedRow(prev => ({ ...prev, comments: panelText, proposal: panelText }));
 
-      triggerToast('Proposal updated and saved to Feedback!', 'success');
+      triggerToast('Saved to Feedback column!', 'success');
       setPanelEditMode(false);
     }
   };
@@ -346,6 +301,7 @@ const Dashboard = () => {
               <option value="3h">Last 3 Hours</option>
               <option value="6h">Last 6 Hours</option>
               <option value="12h">Last 12 Hours</option>
+              <option value="18h">Last 18 Hours</option>
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
             </select>
@@ -370,69 +326,27 @@ const Dashboard = () => {
                   <ProposalRow 
                     key={row.id}
                     row={row}
-                    activeRowId={selectedRow?.id || modal.rowId}
+                    activeRowId={selectedRow?.id}
                     savingMap={savingMap}
-                    onOpenModal={openModal}
                     onOpenPanel={handleOpenPanel}
                     onInputChange={handleInputChange}
                     onSave={handleSave}
                   />
                 ))}
+                
+                {filteredData.length === 0 && (
+                  <tr>
+                    <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#64748b'}}>
+                      <CheckCircle size={48} style={{marginBottom: '16px', opacity: 0.5, display: 'inline-block'}} />
+                      <p>No jobs found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      {/* --- MODAL (Quick View & Edit) --- */}
-      {modal.open && (
-        <div className="modal-overlay" onClick={() => setModal({ ...modal, open: false })}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{width: '700px'}}>
-            <div className="modal-header">
-              <div style={{display:'flex', alignItems:'center', gap: 10}}>
-                <h3 className="modal-title">{modal.title}</h3>
-                {modal.isEditing && <span style={{fontSize:'12px', background:'#dbeafe', color:'#1e40af', padding:'2px 8px', borderRadius:'4px'}}>Editing Mode</span>}
-              </div>
-              <button className="modal-close" onClick={() => setModal({ ...modal, open: false })}><X size={24} /></button>
-            </div>
-            
-            <div className="modal-body">
-              {modal.isEditing ? (
-                <textarea 
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  style={{width: '100%', height: '400px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6', resize: 'none'}}
-                  placeholder="Edit proposal here..."
-                />
-              ) : (
-                <div style={{whiteSpace: 'pre-wrap'}}>{modal.content}</div>
-              )}
-            </div>
-
-            <div className="modal-footer" style={{justifyContent: 'space-between'}}>
-              <div style={{fontSize:'12px', color:'#64748b'}}>{modal.isEditing ? "Changes update Proposal text & Feedback." : ""}</div>
-              <div style={{display:'flex', gap: 10}}>
-                {modal.isEditing ? (
-                  <button className="save-button" style={{width:'auto', padding:'10px 20px'}} onClick={saveEditedContentToFeedback}>
-                    <Check size={16} /> Save Changes
-                  </button>
-                ) : (
-                  modal.showCopy && (
-                    <>
-                      <button className="copy-btn" onClick={() => setModal(prev => ({...prev, isEditing: true, title: 'Edit Proposal'}))} style={{marginRight:'auto'}}>
-                        <Pencil size={16} /> Edit
-                      </button>
-                      <button className="copy-btn" onClick={() => copyToClipboard(modal.content)}>
-                        <Copy size={16} /> Copy Text
-                      </button>
-                    </>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* --- SIDE PANEL (Review & Edit) --- */}
       <div className={`side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
@@ -453,6 +367,7 @@ const Dashboard = () => {
             </div>
 
             <div className="panel-content">
+              
               {/* VIEW: JOB ONLY */}
               {viewMode === 'job' && (
                 <div className="panel-column full-width">
@@ -464,24 +379,44 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* VIEW: PROPOSAL ONLY */}
+              {/* VIEW: PROPOSAL ONLY (Full Width + Editable) */}
               {viewMode === 'proposal' && (
                 <div className="panel-column full-width">
-                   <div className="container-limit">
+                   {/* Removed .container-limit to allow full width usage */}
+                   <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
                       <div className="column-header" style={{justifyContent:'space-between'}}>
                          <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                           <span>Generated Proposal</span>
-                           {/* {panelEditMode && <span style={{fontSize:'10px', background:'#dbeafe', color:'#1e40af', padding:'2px 6px', borderRadius:'4px'}}>Editing</span>} */}
+                           <span>Proposal Draft</span>
+                           {panelEditMode && <span style={{fontSize:'10px', background:'#dbeafe', color:'#1e40af', padding:'2px 6px', borderRadius:'4px'}}>Editing</span>}
+                           {(!panelEditMode && selectedRow.comments && selectedRow.comments !== selectedRow.proposal) && (
+                             <span style={{fontSize:'10px', background:'#dcfce7', color:'#166534', padding:'2px 6px', borderRadius:'4px'}}>Using Feedback Version</span>
+                           )}
                          </div>
                          
                          <div style={{display:'flex', gap: 8}}>
+                           {panelEditMode ? (
+                             <button className="save-button" style={{padding:'6px 12px', fontSize:12, width:'auto'}} onClick={handlePanelSave}>Save</button>
+                           ) : (
                              <>
+                               <button className="copy-btn" onClick={() => setPanelEditMode(true)}><Pencil size={14}/> Edit</button>
                                <button className="copy-btn" onClick={() => copyToClipboard(panelText)}><Copy size={14} /> Copy</button>
                              </>
-                           
+                           )}
                          </div>
                       </div>
-                      <div className="panel-text">{selectedRow.proposal}</div>
+
+                      {panelEditMode ? (
+                        <textarea 
+                          value={panelText} onChange={(e) => setPanelText(e.target.value)}
+                          style={{
+                            flex: 1, width:'100%', padding:'16px', 
+                            border:'1px solid #e2e8f0', borderRadius:'8px', 
+                            resize:'none', fontFamily:'inherit', lineHeight: 1.6
+                          }}
+                        />
+                      ) : (
+                        <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
+                      )}
                    </div>
                 </div>
               )}
@@ -515,13 +450,14 @@ const Dashboard = () => {
                          )}
                        </div>
                     </div>
+
                     {panelEditMode ? (
                       <textarea 
                         value={panelText} onChange={(e) => setPanelText(e.target.value)}
                         style={{width:'100%', height:'100%', minHeight:'300px', padding:'12px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
                       />
                     ) : (
-                      <div className="panel-text">{selectedRow.proposal}</div>
+                      <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
                     )}
                   </div>
                 </>
