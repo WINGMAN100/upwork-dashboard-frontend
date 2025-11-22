@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../services/api';
-import { formatDistanceToNow, subHours } from 'date-fns';
+import { formatDistanceToNow, subDays, subHours } from 'date-fns';
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
   Copy, X, Search, Filter, CheckCircle, 
@@ -189,7 +189,8 @@ const Dashboard = () => {
         else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6)
         else if (timeFilter === '12h') matchesTime = rowDate >= subHours(now, 12);
         else if (timeFilter === '18h') matchesTime = rowDate >= subHours(now, 18);
-        else if (timeFilter === '24h') matchesTime = rowDate >= subHours(now, 24);
+        else if (timeFilter === '1d') matchesTime = rowDate >= subDays(now, 1);
+        else if (timeFilter === '2d') matchesTime = rowDate >= subDays(now, 2);
         else if (timeFilter === '7d') matchesTime = rowDate >= subDays(now, 7);
       }
     }
@@ -302,7 +303,8 @@ const Dashboard = () => {
               <option value="6h">Last 6 Hours</option>
               <option value="12h">Last 12 Hours</option>
               <option value="18h">Last 18 Hours</option>
-              <option value="24h">Last 24 Hours</option>
+              <option value="1d">Last 1 Day</option>
+              <option value="2d">Last 2 Days</option>
               <option value="7d">Last 7 Days</option>
             </select>
           </div>
