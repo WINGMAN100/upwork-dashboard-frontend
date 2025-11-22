@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../services/api';
-import { formatDistanceToNow, subDays, subHours } from 'date-fns';
+import { formatDistanceToNow, subHours } from 'date-fns';
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
   Copy, X, Search, Filter, CheckCircle, 
@@ -185,8 +185,8 @@ const Dashboard = () => {
       const now = new Date();
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
-        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
-        else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6);
+        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3)
+        else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6)
         else if (timeFilter === '12h') matchesTime = rowDate >= subHours(now, 12);
         else if (timeFilter === '18h') matchesTime = rowDate >= subHours(now, 18);
         else if (timeFilter === '24h') matchesTime = rowDate >= subHours(now, 24);
@@ -348,7 +348,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* --- SIDE PANEL (Review & Edit) --- */}
+      {/* --- SIDE PANEL (Full Screen, Centered Content) --- */}
       <div className={`side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
       <div className={`side-panel ${panelOpen ? 'open' : ''}`}>
         {selectedRow && (
@@ -371,19 +371,17 @@ const Dashboard = () => {
               {/* VIEW: JOB ONLY */}
               {viewMode === 'job' && (
                 <div className="panel-column full-width">
-                   <div className="container-limit">
-                      <div className="column-header"><span>Job Description</span></div>
-                      <h4 className="panel-job-title" style={{fontSize: '20px', marginBottom: '16px'}}>{selectedRow.title}</h4>
-                      <p className="panel-text">{selectedRow.description}</p>
-                   </div>
+                   {/* Content is now centered by CSS on .panel-column */}
+                   <div className="column-header"><span>Job Description</span></div>
+                   <h4 className="panel-job-title">{selectedRow.title}</h4>
+                   <p className="panel-text">{selectedRow.description}</p>
                 </div>
               )}
 
-              {/* VIEW: PROPOSAL ONLY (Full Width + Editable) */}
+              {/* VIEW: PROPOSAL ONLY */}
               {viewMode === 'proposal' && (
                 <div className="panel-column full-width">
-                   {/* Removed .container-limit to allow full width usage */}
-                   <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+                   <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
                       <div className="column-header" style={{justifyContent:'space-between'}}>
                          <div style={{display:'flex', gap:8, alignItems:'center'}}>
                            <span>Proposal Draft</span>
@@ -433,32 +431,34 @@ const Dashboard = () => {
 
                   {/* Right: Proposal (Editable) */}
                   <div className="panel-column right">
-                    <div className="column-header" style={{justifyContent:'space-between'}}>
-                       <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                         <span>Generated Proposal</span>
-                         {panelEditMode && <span style={{fontSize:'10px', background:'#dbeafe', color:'#1e40af', padding:'2px 6px', borderRadius:'4px'}}>Editing</span>}
-                       </div>
-                       
-                       <div style={{display:'flex', gap: 8}}>
-                         {panelEditMode ? (
-                           <button className="save-button" style={{padding:'4px 8px', fontSize:11, width:'auto'}} onClick={handlePanelSave}>Save</button>
-                         ) : (
-                           <>
-                             <button className="copy-btn" style={{padding:'4px 8px', fontSize:11}} onClick={() => setPanelEditMode(true)}><Pencil size={12}/> Edit</button>
-                             <button className="copy-btn" style={{padding:'4px 8px', fontSize:11}} onClick={() => copyToClipboard(panelText)}>Copy</button>
-                           </>
-                         )}
-                       </div>
-                    </div>
+                    <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
+                        <div className="column-header" style={{justifyContent:'space-between'}}>
+                           <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                             <span>Generated Proposal</span>
+                             {panelEditMode && <span style={{fontSize:'10px', background:'#dbeafe', color:'#1e40af', padding:'2px 6px', borderRadius:'4px'}}>Editing</span>}
+                           </div>
+                           
+                           <div style={{display:'flex', gap: 8}}>
+                             {panelEditMode ? (
+                               <button className="save-button" style={{padding:'4px 8px', fontSize:11, width:'auto'}} onClick={handlePanelSave}>Save</button>
+                             ) : (
+                               <>
+                                 <button className="copy-btn" style={{padding:'4px 8px', fontSize:11}} onClick={() => setPanelEditMode(true)}><Pencil size={12}/> Edit</button>
+                                 <button className="copy-btn" style={{padding:'4px 8px', fontSize:11}} onClick={() => copyToClipboard(panelText)}>Copy</button>
+                               </>
+                             )}
+                           </div>
+                        </div>
 
-                    {panelEditMode ? (
-                      <textarea 
-                        value={panelText} onChange={(e) => setPanelText(e.target.value)}
-                        style={{width:'100%', height:'100%', minHeight:'300px', padding:'12px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
-                      />
-                    ) : (
-                      <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
-                    )}
+                        {panelEditMode ? (
+                          <textarea 
+                            value={panelText} onChange={(e) => setPanelText(e.target.value)}
+                            style={{flex: 1, width:'100%', padding:'12px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
+                          />
+                        ) : (
+                          <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
+                        )}
+                    </div>
                   </div>
                 </>
               )}
