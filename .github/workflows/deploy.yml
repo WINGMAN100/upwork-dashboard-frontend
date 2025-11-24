@@ -36,6 +36,9 @@ jobs:
         run: |
           docker build \
             --build-arg VITE_BACKEND_URL="${{ secrets.VITE_BACKEND_URL }}" \
+            --build-arg VITE_GENERATE_URL="${{ secrets.VITE_GENERATE_URL }}" \
+            --build-arg VITE_GENERATE_USERNAME="${{ secrets.VITE_GENERATE_USERNAME }}" \
+            --build-arg VITE_GENERATE_PASSWORD="${{ secrets.VITE_GENERATE_PASSWORD }}" \
             -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             .
           docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
