@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const GENERATE_URL = import.meta.env.VITE_GENERATE_URL;
 class ApiError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -81,6 +82,30 @@ class ApiService {
       body: JSON.stringify(payload),
     });
   }
+  async generateProposalOnDemand(jobDescription, questions) {
+    response =  await fetch('http://35.223.232.116:8000/generate', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        client_requirement: jobDescription, 
+        screening_questions: questions,
+        similarity_threshold: 0.30,
+        hybrid_alpha: 0.5,
+        use_section_approach: true,
+        job_id:1.98097717646467E+018
+      }),
+    });
+    if (!response.ok) {
+      throw new ApiError('Failed to generate proposal', response.status);
+    }
+    const responseData = await response.json();
+    const response = responseData.generated_proposal;
+    return response
+  }
+
+  async searchJobLinks(query) {
+    return await this.request(`/search-jobs?q=${encodeURIComponent(query)}`);
+  }
 }
+
 
 export const apiService = new ApiService();

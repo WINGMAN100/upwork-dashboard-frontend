@@ -1,16 +1,15 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../services/api';
-import { formatDistanceToNow, subDays, subHours } from 'date-fns';
+import { formatDistanceToNow, subHours, subDays } from 'date-fns';
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
-  Copy, X, Search, Filter, CheckCircle, 
+  Copy, X, Eye, Search, Filter, CheckCircle, 
   LayoutTemplate, Loader2, AlertCircle, Check, 
-  Pencil, Maximize2, Eye
+  Pencil, Maximize2, Wand2
 } from 'lucide-react';
 import './Dashboard.css';
 
-// --- ROW COMPONENT ---
 const ProposalRow = React.memo(({ 
   row, 
   activeRowId, 
@@ -28,7 +27,7 @@ const ProposalRow = React.memo(({
   return (
     <tr 
       className={activeRowId === row.id ? 'active-row' : ''}
-      onClick={() => onOpenPanel(row)} // CLICKING ROW OPENS SIDE PANEL
+      onClick={() => onOpenPanel(row)}
       style={{ cursor: 'pointer' }}
     >
       
@@ -185,13 +184,12 @@ const Dashboard = () => {
       const now = new Date();
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
-        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3)
-        else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6)
+        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
+        else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6);
         else if (timeFilter === '12h') matchesTime = rowDate >= subHours(now, 12);
-        else if (timeFilter === '18h') matchesTime = rowDate >= subHours(now, 18);
-        else if (timeFilter === '1d') matchesTime = rowDate >= subDays(now, 1);
-        else if (timeFilter === '2d') matchesTime = rowDate >= subDays(now, 2);
+        else if (timeFilter === '24h') matchesTime = rowDate >= subHours(now, 24);
         else if (timeFilter === '7d') matchesTime = rowDate >= subDays(now, 7);
+        else if (timeFilter === '30d') matchesTime = rowDate >= subDays(now, 30);
       }
     }
     return matchesSearch && matchesTime;
@@ -282,7 +280,28 @@ const Dashboard = () => {
             <h1 className="dashboard-title">ProWiz-Upwork Dashboard</h1>
             <p className="dashboard-subtitle">Review and manage your generated proposals</p>
           </div>
-          <button onClick={() => apiService.logout()} className="logout-button"><LogOut size={18}/> Logout</button>
+
+          {/* --- UPDATED NAVIGATION SECTION --- */}
+          <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+            <button 
+              onClick={() => window.location.href = '/generate'} 
+              className="view-btn"
+              style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}
+            >
+              <Wand2 size={16}/> Generator
+            </button>
+            <button 
+              onClick={() => window.location.href = '/search'} 
+              className="view-btn"
+              style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}
+            >
+              <Search size={16}/> Search Links
+            </button>
+            
+            <button onClick={() => apiService.logout()} className="logout-button">
+              <LogOut size={18}/> Logout
+            </button>
+          </div>
         </header>
 
         {/* Toolbar */}
@@ -302,10 +321,9 @@ const Dashboard = () => {
               <option value="3h">Last 3 Hours</option>
               <option value="6h">Last 6 Hours</option>
               <option value="12h">Last 12 Hours</option>
-              <option value="18h">Last 18 Hours</option>
-              <option value="1d">Last 1 Day</option>
-              <option value="2d">Last 2 Days</option>
+              <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
             </select>
           </div>
         </div>
