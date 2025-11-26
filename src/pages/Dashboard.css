@@ -312,9 +312,113 @@
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
 }
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  position: relative;
+  z-index: 10;
+}
 
-/* ... (Keep Panel, Toast, and Loading styles as they are) ... */
-/* Ensure these exist from previous steps */
+.pagination-info {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Wrapper to group Prev, Numbers, and Next */
+.pagination-controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pagination-numbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Previous / Next Buttons (Text + Icon) */
+.page-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-nav-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.page-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #94a3b8;
+}
+
+/* Number Buttons (1, 2, 3...) */
+.page-number-btn {
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-number-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.page-number-btn.active {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.pagination-ellipsis {
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 0 4px;
+  user-select: none;
+}
+.table-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #64748b;
+  width: 100%;
+}
+
+.spin-anim {
+  animation: spin 1s linear infinite;
+}
 .side-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 40; backdrop-filter: blur(2px); opacity: 0; visibility: hidden; transition: all 0.3s; }
 .side-panel-overlay.open { opacity: 1; visibility: visible; }
 .side-panel { position: fixed; inset: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 50; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }

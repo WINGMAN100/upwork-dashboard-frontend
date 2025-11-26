@@ -72,8 +72,25 @@ class ApiService {
     return response;
   }
 
-  async getProposals() {
-    return await this.request('/dashboard/all'); 
+ async getProposals(page = 1, limit = 20, search = '', timeFilter = 'all') {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+  const timeParam = timeFilter !== 'all' ? `&time_filter=${timeFilter}` : '';
+  
+  return await this.request(`/dashboard/all?page=${page}&limit=${limit}${searchParam}${timeParam}`);
+}
+async get_count(search = '', timeFilter = 'all') {
+    const params = new URLSearchParams();
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (timeFilter && timeFilter !== 'all') {
+      params.append('time_filter', timeFilter);
+    }
+    
+    const queryString = params.toString();
+    return await this.request(`/dashboard/count${queryString ? `?${queryString}` : ''}`);
   }
 
   async updateProposal(rowId, payload) {
@@ -81,29 +98,6 @@ class ApiService {
       method: 'PATCH',
       body: JSON.stringify(payload),
     });
-  }
-  async generateProposalOnDemand(jobDescription, questions) {
-    response =  await fetch('http://35.223.232.116:8000/generate', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        client_requirement: jobDescription, 
-        screening_questions: questions,
-        similarity_threshold: 0.30,
-        hybrid_alpha: 0.5,
-        use_section_approach: true,
-        job_id:1.98097717646467E+018
-      }),
-    });
-    if (!response.ok) {
-      throw new ApiError('Failed to generate proposal', response.status);
-    }
-    const responseData = await response.json();
-    const response = responseData.generated_proposal;
-    return response
-  }
-
-  async searchJobLinks(query) {
-    return await this.request(`/search-jobs?q=${encodeURIComponent(query)}`);
   }
 }
 

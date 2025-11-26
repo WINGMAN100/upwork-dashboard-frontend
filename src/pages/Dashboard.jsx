@@ -1,16 +1,18 @@
-// src/pages/Dashboard.jsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
-import { formatDistanceToNow } from 'date-fns'; // Removed unused imports
+import { formatDistanceToNow } from 'date-fns';
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
   Copy, X, Eye, Search, Filter, CheckCircle, 
-  LayoutTemplate, Loader2, AlertCircle, Check, 
-  Pencil, Maximize2, Wand2
+  LayoutTemplate, Loader2, AlertCircle, 
+  Pencil, Maximize2, Wand2, ChevronLeft, ChevronRight, RefreshCw
 } from 'lucide-react';
 import './Dashboard.css';
-import { subHours, subDays } from 'date-fns';
 
+const LIMIT = 20; // Items per page
+const CACHE_KEY = 'dashboard_state';
+
+// --- ROW COMPONENT ---
 const ProposalRow = React.memo(({ 
   row, 
   activeRowId, 
@@ -19,7 +21,6 @@ const ProposalRow = React.memo(({
   onInputChange, 
   onSave 
 }) => {
-  
   const formatTime = (d) => { 
     try { return formatDistanceToNow(new Date(d), { addSuffix: true }); } 
     catch (e) { return "Just now"; }
@@ -31,7 +32,6 @@ const ProposalRow = React.memo(({
       onClick={() => onOpenPanel(row)}
       style={{ cursor: 'pointer' }}
     >
-      
       {/* QUERY COLUMN */}
       <td className="query-cell">
         <div className="table-item">
@@ -125,38 +125,134 @@ const ProposalRow = React.memo(({
 
 // --- MAIN DASHBOARD ---
 const Dashboard = () => {
+  // Data State
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingMap, setSavingMap] = useState({});
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0); // NEW: Stores total items
+  
+  // Filter State
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [timeFilter, setTimeFilter] = useState('all');
 
   // Panel State
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null); 
   const [viewMode, setViewMode] = useState('split'); 
-  
-  // Panel Edit State
   const [panelEditMode, setPanelEditMode] = useState(false);
   const [panelText, setPanelText] = useState('');
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const isFirstRun = useRef(true);
 
-  useEffect(() => { fetchData(); }, []);
+  // 1. Initial Load (Check Cache)
+  useEffect(() => {
+    const restoreState = () => {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setData(parsed.data);
+          setPage(parsed.page);
+          setTotalCount(parsed.totalCount || 0);
+          setSearchTerm(parsed.searchTerm || '');
+          setDebouncedSearch(parsed.searchTerm || '');
+          setTimeFilter(parsed.timeFilter || 'all');
+          setLoading(false);
+          setTimeout(() => window.scrollTo(0, parsed.scrollTop || 0), 100);
+          return true;
+        } catch (e) {
+          sessionStorage.removeItem(CACHE_KEY);
+        }
+      }
+      return false;
+    };
+
+    const loadedFromCache = restoreState();
+    if (!loadedFromCache) {
+      // Fetch both data and count on initial load
+      fetchData(1, '', 'all'); 
+      fetchCount('', 'all');
+    }
+    isFirstRun.current = false;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 2. Persist State
+  useEffect(() => {
+    if (!loading && data.length > 0) {
+      const stateToSave = {
+        data,
+        page,
+        totalCount,
+        searchTerm,
+        timeFilter,
+        scrollTop: window.scrollY
+      };
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(stateToSave));
+    }
+  }, [data, page, totalCount, loading, searchTerm, timeFilter]);
+
+  // 3. Debounce Search
+  useEffect(() => {
+    if (isFirstRun.current) return;
+    const timer = setTimeout(() => {
+      if (debouncedSearch !== searchTerm) {
+        setDebouncedSearch(searchTerm);
+        handleFilterChange(searchTerm, timeFilter);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Wrapper to handle Filter/Search changes (Resets Page & Fetches Count)
+  const handleFilterChange = (newSearch, newTime) => {
+    setPage(1);
+    fetchData(1, newSearch, newTime);
+    fetchCount(newSearch, newTime); // Re-fetch count because filters changed
+  };
+
+  const handleTimeFilterChange = (e) => {
+    const newVal = e.target.value;
+    setTimeFilter(newVal);
+    handleFilterChange(debouncedSearch, newVal);
+  };
 
   const triggerToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
   };
 
-  const fetchData = async () => {
-    try {
-      const result = await apiService.getProposals();
-      
-      // 1. Remove Duplicates based on 'id'
-      const uniqueResult = Array.from(new Map(result.map(item => [item.id, item])).values());
+  // --- API CALLS ---
 
-      // 2. Map Data
+  const fetchCount = async (searchArg, timeArg) => {
+    try {
+      let result;
+      if (searchArg || timeArg) {
+        result = await apiService.get_count(searchArg, timeArg);
+      }
+      else{
+        result = await apiService.get_count(); 
+      }
+      const count = result.count !== undefined ? result.count : result;
+      setTotalCount(Number(count));
+    } catch (err) {
+      console.error("Count fetch error:", err);
+    }
+  };
+
+  const fetchData = async (pageNum, searchArg = searchTerm, timeArg = timeFilter, forceRefresh = false) => {
+    if (!forceRefresh) setLoading(true);
+    try {
+      const result = await apiService.getProposals(pageNum, LIMIT, searchArg, timeArg);
+      const rows = Array.isArray(result) ? result : (result.data || []);
+      
+      const uniqueResult = Array.from(new Map(rows.map(item => [item.id, item])).values());
+      
       const mappedData = uniqueResult.map(item => ({
         id: item.id,
         title: item.title,
@@ -167,39 +263,21 @@ const Dashboard = () => {
         comments: item.comments || '',
         applied: item.applied || 'no'
       }));
-      const sortedData = mappedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setData(sortedData);
+
+      setData(mappedData);
+      setPage(pageNum);
     } catch (err) {
-      console.error("Fetch error:", err);
-      setError("Failed to load proposals.");
+      triggerToast("Failed to load proposals.", 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredData = data.filter(row => {
-    const term = searchTerm.toLowerCase().trim();
-    const matchesSearch = !term || 
-      (row.title && row.title.toLowerCase().includes(term)) ||
-      (row.description && row.description.toLowerCase().includes(term)) ||
-      (row.id && row.id.toString().toLowerCase().includes(term));
-
-    let matchesTime = true;
-    if (timeFilter !== 'all') {
-      const rowDate = new Date(row.created_at);
-      const now = new Date();
-      if (!isNaN(rowDate.getTime())) {
-        if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
-        else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
-        else if (timeFilter === '6h') matchesTime = rowDate >= subHours(now, 6);
-        else if (timeFilter === '12h') matchesTime = rowDate >= subHours(now, 12);
-        else if (timeFilter === '24h') matchesTime = rowDate >= subHours(now, 24);
-        else if (timeFilter === '7d') matchesTime = rowDate >= subDays(now, 7);
-        else if (timeFilter === '30d') matchesTime = rowDate >= subDays(now, 30);
-      }
-    }
-    return matchesSearch && matchesTime;
-  });
+  const handleRefresh = () => {
+    sessionStorage.removeItem(CACHE_KEY);
+    fetchData(1, searchTerm, timeFilter, false);
+    fetchCount(searchTerm, timeFilter);
+  };
 
   const handleInputChange = useCallback((id, field, value) => {
     setData(prevData => prevData.map(row => row.id === id ? { ...row, [field]: value } : row));
@@ -217,6 +295,70 @@ const Dashboard = () => {
     }
   }, []);
 
+  // --- PAGINATION LOGIC ---
+  const handlePageChange = (newPage) => {
+    if (newPage !== page && newPage >= 1 && newPage <= Math.ceil(totalCount / LIMIT)) {
+      setPage(newPage);
+      fetchData(newPage, debouncedSearch, timeFilter);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const renderPagination = () => {
+    const totalPages = Math.ceil(totalCount / LIMIT);
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    // Always show first page
+    pages.push(1);
+
+    let startPage, endPage;
+    
+    // Logic to show a "Window" of pages (e.g., 1 ... 4 5 6 ... 20)
+    if (totalPages <= 7) {
+      // If few pages, show all
+      startPage = 2;
+      endPage = totalPages;
+    } else {
+      // Dynamic window
+      if (page <= 4) {
+        startPage = 2;
+        endPage = 5;
+      } else if (page >= totalPages - 3) {
+        startPage = totalPages - 4;
+        endPage = totalPages - 1;
+      } else {
+        startPage = page - 1;
+        endPage = page + 1;
+      }
+    }
+
+    if (startPage > 2) pages.push('...');
+
+    for (let i = startPage; i <= endPage; i++) {
+      if (i < totalPages) pages.push(i);
+    }
+
+    if (endPage < totalPages - 1) pages.push('...');
+    
+    // Always show last page
+    pages.push(totalPages);
+
+    return pages.map((p, index) => {
+      if (p === '...') return <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>;
+      return (
+        <button
+          key={p}
+          className={`page-number-btn ${p === page ? 'active' : ''}`}
+          onClick={() => handlePageChange(p)}
+        >
+          {p}
+        </button>
+      );
+    });
+  };
+
+  // --- PANEL & UTILS ---
   const handleOpenPanel = useCallback((row) => {
     setSelectedRow(row);
     setViewMode('split'); 
@@ -227,34 +369,23 @@ const Dashboard = () => {
 
   const handlePanelSave = () => {
     if (selectedRow) {
-      setData(prevData => prevData.map(row => 
-        row.id === selectedRow.id 
-          ? { ...row, comments: panelText, proposal: panelText } 
-          : row
-      ));
+      setData(prev => prev.map(r => r.id === selectedRow.id ? { ...r, comments: panelText, proposal: panelText } : r));
       setSelectedRow(prev => ({ ...prev, comments: panelText, proposal: panelText }));
       triggerToast('Saved to Feedback column!', 'success');
       setPanelEditMode(false);
     }
   };
 
-  const handleClosePanel = () => {
-    setPanelOpen(false);
-  };
-
+  const handleClosePanel = () => setPanelOpen(false);
+  
   const copyToClipboard = async (text) => {
-    try { 
-      await navigator.clipboard.writeText(text); 
-      triggerToast('Copied to clipboard!', 'success');
-    } catch (err) { console.error('Failed to copy:', err); }
+    try { await navigator.clipboard.writeText(text); triggerToast('Copied!', 'success'); } 
+    catch (err) { console.error(err); }
   };
 
-  if (loading) return (
-    <div className="loading-container">
-      <Loader2 size={48} className="loader-spinner" />
-      <p className="loading-text">Fetching proposals...</p>
-    </div>
-  );
+  // Calculate range for footer text
+  const startItem = (page - 1) * LIMIT + 1;
+  const endItem = Math.min(page * LIMIT, totalCount);
 
   return (
     <div className="dashboard-container">
@@ -282,24 +413,12 @@ const Dashboard = () => {
           </div>
 
           <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
-            <button 
-              onClick={() => window.location.href = '/generate'} 
-              className="view-btn"
-              style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}
-            >
-              <Wand2 size={16}/> Generator
+            <button onClick={() => window.location.href = '/generate'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Wand2 size={16}/> Generator</button>
+            <button onClick={() => window.location.href = '/search'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Search size={16}/> Search Links</button>
+            <button onClick={handleRefresh} className="view-btn" title="Refresh Data" disabled={loading} style={{background: '#f8fafc', color: loading ? '#cbd5e1' : '#64748b', border: '1px solid #e2e8f0'}}>
+              <RefreshCw size={16} className={loading ? 'spin-anim' : ''} />
             </button>
-            <button 
-              onClick={() => window.location.href = '/search'} 
-              className="view-btn"
-              style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}
-            >
-              <Search size={16}/> Search Links
-            </button>
-            
-            <button onClick={() => apiService.logout()} className="logout-button">
-              <LogOut size={18}/> Logout
-            </button>
+            <button onClick={() => apiService.logout()} className="logout-button"><LogOut size={18}/> Logout</button>
           </div>
         </header>
 
@@ -308,13 +427,16 @@ const Dashboard = () => {
           <div className="search-wrapper">
             <Search size={18} className="search-icon" />
             <input 
-              type="text" placeholder="Search by ID, title, or description..." className="search-input" 
-              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              type="text" 
+              placeholder="Search by title or description (Server-side)" 
+              className="search-input" 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="filter-wrapper">
             <Filter size={18} className="filter-icon" />
-            <select className="filter-select" value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)}>
+            <select className="filter-select" value={timeFilter} onChange={handleTimeFilterChange}>
               <option value="all">All Time</option>
               <option value="1h">Last 1 Hour</option>
               <option value="3h">Last 3 Hours</option>
@@ -327,7 +449,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table Area */}
         <div className={`table-card ${panelOpen ? 'shrink' : ''}`}>
           <div className="table-container">
             <table className="glass-table">
@@ -341,33 +463,78 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((row) => (
-                  <ProposalRow 
-                    key={row.id}
-                    row={row}
-                    activeRowId={selectedRow?.id}
-                    savingMap={savingMap}
-                    onOpenPanel={handleOpenPanel}
-                    onInputChange={handleInputChange}
-                    onSave={handleSave}
-                  />
-                ))}
-                
-                {filteredData.length === 0 && (
+                {loading ? (
                   <tr>
-                    <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#64748b'}}>
-                      <CheckCircle size={48} style={{marginBottom: '16px', opacity: 0.5, display: 'inline-block'}} />
-                      <p>No jobs found matching your criteria.</p>
+                    <td colSpan="5">
+                      <div className="table-loading-state">
+                        <Loader2 size={40} className="loader-spinner" />
+                        <p>Fetching data...</p>
+                      </div>
                     </td>
                   </tr>
+                ) : (
+                  <>
+                    {data.map((row) => (
+                      <ProposalRow 
+                        key={row.id}
+                        row={row}
+                        activeRowId={selectedRow?.id}
+                        savingMap={savingMap}
+                        onOpenPanel={handleOpenPanel}
+                        onInputChange={handleInputChange}
+                        onSave={handleSave}
+                      />
+                    ))}
+                    
+                    {data.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#64748b'}}>
+                          <CheckCircle size={48} style={{marginBottom: '16px', opacity: 0.5, display: 'inline-block'}} />
+                          <p>No jobs found matching your criteria.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* PAGINATION FOOTER */}
+          <div className="pagination-footer">
+            <div className="pagination-info">
+              {totalCount > 0 
+                ? `Showing ${startItem}-${endItem} of ${totalCount} items`
+                : 'No items to show'
+              }
+            </div>
+            
+            <div className="pagination-controls-wrapper">
+              <button 
+                className="page-nav-btn" 
+                onClick={() => handlePageChange(page - 1)} 
+                disabled={page === 1 || loading}
+              >
+                <ChevronLeft size={16} /> Prev
+              </button>
+
+              <div className="pagination-numbers">
+                {renderPagination()}
+              </div>
+
+              <button 
+                className="page-nav-btn" 
+                onClick={() => handlePageChange(page + 1)} 
+                disabled={page >= Math.ceil(totalCount / LIMIT) || loading}
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* --- SIDE PANEL --- */}
+      {/* --- SIDE PANEL (Unchanged) --- */}
       <div className={`side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
       <div className={`side-panel ${panelOpen ? 'open' : ''}`}>
         {selectedRow && (
@@ -375,7 +542,6 @@ const Dashboard = () => {
             <div className="panel-header">
               <div style={{display:'flex', alignItems:'center'}}>
                 <h3 className="panel-title" style={{marginRight: '20px'}}>Review</h3>
-                
                 <div className="panel-controls">
                   <button className={`view-btn ${viewMode === 'job' ? 'active' : ''}`} onClick={() => setViewMode('job')}><FileText size={14} /> Job</button>
                   <button className={`view-btn ${viewMode === 'proposal' ? 'active' : ''}`} onClick={() => setViewMode('proposal')}><Maximize2 size={14} /> Proposal</button>
@@ -386,7 +552,6 @@ const Dashboard = () => {
             </div>
 
             <div className="panel-content">
-              {/* JOB ONLY */}
               {viewMode === 'job' && (
                 <div className="panel-column full-width">
                    <div className="column-header"><span>Job Description</span></div>
@@ -395,7 +560,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* PROPOSAL ONLY (Full Width) */}
               {viewMode === 'proposal' && (
                 <div className="panel-column full-width">
                    <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
@@ -407,7 +571,6 @@ const Dashboard = () => {
                              <span style={{fontSize:'10px', background:'#dcfce7', color:'#166534', padding:'2px 6px', borderRadius:'4px'}}>Using Feedback Version</span>
                            )}
                          </div>
-                         
                          <div style={{display:'flex', gap: 8}}>
                            {panelEditMode ? (
                              <button className="save-button" style={{padding:'6px 12px', fontSize:12, width:'auto'}} onClick={handlePanelSave}>Save</button>
@@ -419,12 +582,8 @@ const Dashboard = () => {
                            )}
                          </div>
                       </div>
-
                       {panelEditMode ? (
-                        <textarea 
-                          value={panelText} onChange={(e) => setPanelText(e.target.value)}
-                          style={{flex: 1, width:'100%', padding:'16px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
-                        />
+                        <textarea value={panelText} onChange={(e) => setPanelText(e.target.value)} style={{flex: 1, width:'100%', padding:'16px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}} />
                       ) : (
                         <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
                       )}
@@ -432,7 +591,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* SPLIT VIEW */}
               {viewMode === 'split' && (
                 <>
                   <div className="panel-column left">
@@ -440,7 +598,6 @@ const Dashboard = () => {
                     <h4 className="panel-job-title">{selectedRow.title}</h4>
                     <p className="panel-text" style={{marginTop:'12px'}}>{selectedRow.description}</p>
                   </div>
-
                   <div className="panel-column right">
                     <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
                         <div className="column-header" style={{justifyContent:'space-between'}}>
@@ -448,7 +605,6 @@ const Dashboard = () => {
                              <span>Generated Proposal</span>
                              {panelEditMode && <span style={{fontSize:'10px', background:'#dbeafe', color:'#1e40af', padding:'2px 6px', borderRadius:'4px'}}>Editing</span>}
                            </div>
-                           
                            <div style={{display:'flex', gap: 8}}>
                              {panelEditMode ? (
                                <button className="save-button" style={{padding:'4px 8px', fontSize:11, width:'auto'}} onClick={handlePanelSave}>Save</button>
@@ -460,12 +616,8 @@ const Dashboard = () => {
                              )}
                            </div>
                         </div>
-
                         {panelEditMode ? (
-                          <textarea 
-                            value={panelText} onChange={(e) => setPanelText(e.target.value)}
-                            style={{flex: 1, width:'100%', padding:'12px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
-                          />
+                          <textarea value={panelText} onChange={(e) => setPanelText(e.target.value)} style={{flex: 1, width:'100%', padding:'12px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}} />
                         ) : (
                           <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
                         )}
