@@ -186,8 +186,8 @@ const Dashboard = () => {
 
     let matchesTime = true;
     if (timeFilter !== 'all') {
-      console.log("Row Date:", rowDate);
-      console.log("Now:", now);
+      const rowDate = new Date(row.created_at);
+      const now = new Date();
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
         else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
