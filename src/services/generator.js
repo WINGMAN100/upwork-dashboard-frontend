@@ -107,7 +107,15 @@ class GeneratorService {
     return response;
   }
   async searchJobLinks(query) {
-    return await this.request(`/search-jobs?q=${encodeURIComponent(query)}`);
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    const response = await this.request(`/search-link?q=${encodeURIComponent(query)}&k=5`); 
+    return response.results || [];
   }
 }
 

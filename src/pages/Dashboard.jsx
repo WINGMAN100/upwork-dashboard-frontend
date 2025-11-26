@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../services/api';
-import { formatDistanceToNow, subHours, subDays } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns'; // Removed unused imports
 import { 
   LogOut, ExternalLink, Save, Clock, FileText, 
   Copy, X, Eye, Search, Filter, CheckCircle, 
@@ -9,6 +9,7 @@ import {
   Pencil, Maximize2, Wand2
 } from 'lucide-react';
 import './Dashboard.css';
+import { subHours, subDays } from 'date-fns';
 
 const ProposalRow = React.memo(({ 
   row, 
@@ -31,10 +32,9 @@ const ProposalRow = React.memo(({
       style={{ cursor: 'pointer' }}
     >
       
-      {/* QUERY COLUMN (Merged: Time + Title Link + Description) */}
+      {/* QUERY COLUMN */}
       <td className="query-cell">
         <div className="table-item">
-           {/* Time */}
            <div style={{
              fontSize: '11px', color: '#94a3b8', fontWeight: '600', 
              textTransform: 'uppercase', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px'
@@ -42,14 +42,13 @@ const ProposalRow = React.memo(({
               <Clock size={10} /> {formatTime(row.created_at)}
            </div>
 
-           {/* Title (Link) */}
            <div style={{marginBottom: '6px'}}>
              {row.link ? (
                 <a 
                   href={row.link} target="_blank" rel="noreferrer" 
                   style={{color: '#0f172a', fontWeight: '600', fontSize: '15px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px'}}
                   className="hover-link"
-                  onClick={(e) => e.stopPropagation()} // Prevent opening panel when clicking link
+                  onClick={(e) => e.stopPropagation()}
                   onMouseEnter={(e) => e.target.style.color = '#2563eb'}
                   onMouseLeave={(e) => e.target.style.color = '#0f172a'}
                 >
@@ -60,14 +59,13 @@ const ProposalRow = React.memo(({
              )}
            </div>
 
-           {/* Description */}
            <div className="item-desc" title="Click row to view details">
               {row.description}
            </div>
         </div>
       </td>
 
-      {/* PROPOSAL COLUMN (Preview Only) */}
+      {/* PROPOSAL COLUMN */}
       <td>
         {row.proposal ? (
           <div className="table-item">
@@ -88,7 +86,7 @@ const ProposalRow = React.memo(({
         )}
       </td>
 
-      {/* FEEDBACK COLUMN (Stop Propagation) */}
+      {/* FEEDBACK COLUMN */}
       <td onClick={(e) => e.stopPropagation()}>
         <textarea 
           value={row.comments || ''} 
@@ -100,7 +98,7 @@ const ProposalRow = React.memo(({
         />
       </td>
 
-      {/* APPLIED COLUMN (Stop Propagation) */}
+      {/* APPLIED COLUMN */}
       <td onClick={(e) => e.stopPropagation()}>
         <select 
           value={row.applied || 'no'} 
@@ -112,7 +110,7 @@ const ProposalRow = React.memo(({
         </select>
       </td>
 
-      {/* ACTIONS COLUMN (Stop Propagation) */}
+      {/* ACTIONS COLUMN */}
       <td onClick={(e) => e.stopPropagation()}>
         <div className="action-buttons">
           <button onClick={() => onSave(row)} disabled={savingMap[row.id]} className="save-button">
@@ -153,7 +151,12 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       const result = await apiService.getProposals();
-      const mappedData = result.map(item => ({
+      
+      // 1. Remove Duplicates based on 'id'
+      const uniqueResult = Array.from(new Map(result.map(item => [item.id, item])).values());
+
+      // 2. Map Data
+      const mappedData = uniqueResult.map(item => ({
         id: item.id,
         title: item.title,
         description: item.description,
@@ -163,9 +166,11 @@ const Dashboard = () => {
         comments: item.comments || '',
         applied: item.applied || 'no'
       }));
-      setData(mappedData);
+      const sortedData = mappedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setData(sortedData);
     } catch (err) {
       console.error("Fetch error:", err);
+      setError("Failed to load proposals.");
     } finally {
       setLoading(false);
     }
@@ -181,7 +186,9 @@ const Dashboard = () => {
     let matchesTime = true;
     if (timeFilter !== 'all') {
       const rowDate = new Date(row.created_at);
+      console.log("Row Date:", rowDate);
       const now = new Date();
+      console.log("Now:", now);
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
         else if (timeFilter === '3h') matchesTime = rowDate >= subHours(now, 3);
@@ -211,28 +218,22 @@ const Dashboard = () => {
     }
   }, []);
 
-  // --- SIDE PANEL HANDLERS ---
   const handleOpenPanel = useCallback((row) => {
     setSelectedRow(row);
     setViewMode('split'); 
     setPanelOpen(true);
     setPanelEditMode(false);
-    // Use existing comments if available, else original proposal
     setPanelText(row.comments || row.proposal || '');
   }, []);
 
   const handlePanelSave = () => {
     if (selectedRow) {
-      // 1. Update Global Data State
       setData(prevData => prevData.map(row => 
         row.id === selectedRow.id 
           ? { ...row, comments: panelText, proposal: panelText } 
           : row
       ));
-
-      // 2. Update Local Panel State
       setSelectedRow(prev => ({ ...prev, comments: panelText, proposal: panelText }));
-
       triggerToast('Saved to Feedback column!', 'success');
       setPanelEditMode(false);
     }
@@ -281,7 +282,6 @@ const Dashboard = () => {
             <p className="dashboard-subtitle">Review and manage your generated proposals</p>
           </div>
 
-          {/* --- UPDATED NAVIGATION SECTION --- */}
           <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
             <button 
               onClick={() => window.location.href = '/generate'} 
@@ -358,7 +358,7 @@ const Dashboard = () => {
                   <tr>
                     <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: '#64748b'}}>
                       <CheckCircle size={48} style={{marginBottom: '16px', opacity: 0.5, display: 'inline-block'}} />
-                      <p>No jobs found.</p>
+                      <p>No jobs found matching your criteria.</p>
                     </td>
                   </tr>
                 )}
@@ -368,7 +368,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* --- SIDE PANEL (Full Screen, Centered Content) --- */}
+      {/* --- SIDE PANEL --- */}
       <div className={`side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
       <div className={`side-panel ${panelOpen ? 'open' : ''}`}>
         {selectedRow && (
@@ -387,18 +387,16 @@ const Dashboard = () => {
             </div>
 
             <div className="panel-content">
-              
-              {/* VIEW: JOB ONLY */}
+              {/* JOB ONLY */}
               {viewMode === 'job' && (
                 <div className="panel-column full-width">
-                   {/* Content is now centered by CSS on .panel-column */}
                    <div className="column-header"><span>Job Description</span></div>
                    <h4 className="panel-job-title">{selectedRow.title}</h4>
                    <p className="panel-text">{selectedRow.description}</p>
                 </div>
               )}
 
-              {/* VIEW: PROPOSAL ONLY */}
+              {/* PROPOSAL ONLY (Full Width) */}
               {viewMode === 'proposal' && (
                 <div className="panel-column full-width">
                    <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
@@ -426,11 +424,7 @@ const Dashboard = () => {
                       {panelEditMode ? (
                         <textarea 
                           value={panelText} onChange={(e) => setPanelText(e.target.value)}
-                          style={{
-                            flex: 1, width:'100%', padding:'16px', 
-                            border:'1px solid #e2e8f0', borderRadius:'8px', 
-                            resize:'none', fontFamily:'inherit', lineHeight: 1.6
-                          }}
+                          style={{flex: 1, width:'100%', padding:'16px', border:'1px solid #e2e8f0', borderRadius:'8px', resize:'none', fontFamily:'inherit', lineHeight: 1.6}}
                         />
                       ) : (
                         <div className="panel-text">{selectedRow.comments || selectedRow.proposal}</div>
@@ -439,17 +433,15 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* VIEW: SPLIT (JOB + PROPOSAL) */}
+              {/* SPLIT VIEW */}
               {viewMode === 'split' && (
                 <>
-                  {/* Left: Job */}
                   <div className="panel-column left">
                     <div className="column-header"><span>Job Description</span></div>
                     <h4 className="panel-job-title">{selectedRow.title}</h4>
                     <p className="panel-text" style={{marginTop:'12px'}}>{selectedRow.description}</p>
                   </div>
 
-                  {/* Right: Proposal (Editable) */}
                   <div className="panel-column right">
                     <div style={{height: '100%', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column'}}>
                         <div className="column-header" style={{justifyContent:'space-between'}}>
