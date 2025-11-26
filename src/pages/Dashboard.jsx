@@ -107,6 +107,7 @@ const ProposalRow = React.memo(({
         >
           <option value="no">No</option>
           <option value="yes">Yes</option>
+          <option value="not_relevant">Not Relevant</option>
         </select>
       </td>
 
@@ -185,9 +186,7 @@ const Dashboard = () => {
 
     let matchesTime = true;
     if (timeFilter !== 'all') {
-      const rowDate = new Date(row.created_at);
       console.log("Row Date:", rowDate);
-      const now = new Date();
       console.log("Now:", now);
       if (!isNaN(rowDate.getTime())) {
         if (timeFilter === '1h') matchesTime = rowDate >= subHours(now, 1);
