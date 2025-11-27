@@ -117,6 +117,71 @@ class GeneratorService {
     const response = await this.request(`/search-link?q=${encodeURIComponent(query)}&k=5`); 
     return response.results || [];
   }
+  async getPrompts(query){
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    if (query === "main_prompt") {
+    const response = await this.request(`/prompts?name=${encodeURIComponent(query)}`);
+    return response.prompts || [];
+    }
+    else {
+        const response = await this.request("/prompts");
+        return response.prompts || [];
+    }
+  }
+  async syncPrompts(promptName){
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    if (promptName === "main_prompt") {
+    const response = await this.request("/sync-prompt", {
+        method: 'POST',
+        body: JSON.stringify({ 
+        prompt_name: promptName 
+      })
+    });
+    return response;
+    }
+    else{
+    const response = await this.request("/sync-prompt", {
+        method: 'POST',
+    });
+    return response;
+    }
+  }
+  async getKeywords() {
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    return await this.request("/keywords"); 
+  }
+
+  async updateKeywords(payload) {
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    return await this.request("/edit-keywords", {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
 }
 
 export const generatorService = new GeneratorService();

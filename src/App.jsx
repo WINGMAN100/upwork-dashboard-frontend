@@ -1,10 +1,10 @@
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import GenerateProposal from './pages/GenerateProposal'; // New Page
-import JobSearch from './pages/JobSearch'; // New Page
+import GenerateProposal from './pages/GenerateProposal';
+import JobSearch from './pages/JobSearch';
+import Config from './pages/Config'; // <--- 1. Import Config Page
 import { apiService } from './services/api';
 
 const ProtectedRoute = ({ children }) => {
@@ -12,6 +12,17 @@ const ProtectedRoute = ({ children }) => {
   if (!apiService.isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
+  return children;
+};
+const AdminRoute = ({ children }) => {
+  if (!apiService.isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  const role = apiService.getRole();
+  if (role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
 };
 
@@ -51,8 +62,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
-
-        {/* Default Redirect */}
+        <Route 
+          path="/config" 
+          element={
+            <AdminRoute>
+              <Config />
+            </AdminRoute>
+          } 
+        />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>

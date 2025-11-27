@@ -27,7 +27,9 @@ class ApiService {
   getToken() {
     return localStorage.getItem('authToken');
   }
-
+  getRole(){
+    return localStorage.getItem('role');
+  }
   async request(endpoint, options = {}) {
     const token = this.getToken();
     
@@ -97,6 +99,19 @@ async get_count(search = '', timeFilter = 'all') {
     return await this.request(`/dashboard/update/${rowId}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
+    });
+  }
+  async updatePrompt(location, promptText) {
+    const formattedPrompt = promptText.startsWith('\n') ? promptText : `\n${promptText}`;
+    console.log(formattedPrompt)
+    console.log(location)
+
+    return await this.request('/prompt/update-prompt', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        location: location, 
+        prompt: formattedPrompt
+      })
     });
   }
 }

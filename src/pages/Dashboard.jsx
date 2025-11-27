@@ -5,7 +5,8 @@ import {
   LogOut, ExternalLink, Save, Clock, FileText, 
   Copy, X, Eye, Search, Filter, CheckCircle, 
   LayoutTemplate, Loader2, AlertCircle, 
-  Pencil, Maximize2, Wand2, ChevronLeft, ChevronRight, RefreshCw
+  Pencil, Maximize2, Wand2, ChevronLeft, ChevronRight, RefreshCw,
+  Settings // <--- 1. Added Settings Icon
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -146,11 +147,18 @@ const Dashboard = () => {
   const [panelEditMode, setPanelEditMode] = useState(false);
   const [panelText, setPanelText] = useState('');
 
+  // Admin State
+  const [isAdmin, setIsAdmin] = useState(false); // <--- 2. Added Admin State
+
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const isFirstRun = useRef(true);
 
   // 1. Initial Load (Check Cache)
   useEffect(() => {
+    // <--- 3. Check Role Logic
+    const role = apiService.getRole();
+    setIsAdmin(role === 'admin');
+
     const restoreState = () => {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -413,6 +421,19 @@ const Dashboard = () => {
           </div>
 
           <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+            
+            {/* <--- 4. Config Button (Visible only to Admin) */}
+            {isAdmin && (
+              <button 
+                onClick={() => window.location.href = '/config'} 
+                className="view-btn"
+                title="System Configuration"
+                style={{background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0'}}
+              >
+                <Settings size={16}/> Config
+              </button>
+            )}
+
             <button onClick={() => window.location.href = '/generate'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Wand2 size={16}/> Generator</button>
             <button onClick={() => window.location.href = '/search'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Search size={16}/> Search Links</button>
             <button onClick={handleRefresh} className="view-btn" title="Refresh Data" disabled={loading} style={{background: '#f8fafc', color: loading ? '#cbd5e1' : '#64748b', border: '1px solid #e2e8f0'}}>
@@ -428,7 +449,7 @@ const Dashboard = () => {
             <Search size={18} className="search-icon" />
             <input 
               type="text" 
-              placeholder="Search by title or description (Server-side)" 
+              placeholder="Search by title or description" 
               className="search-input" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)}
