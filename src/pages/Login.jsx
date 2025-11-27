@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, ArrowRight } from 'lucide-react';
+// 1. Import Eye and EyeOff icons
+import { Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../services/api';
 import './Login.css';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
+  // 2. Add state to track password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -13,6 +16,11 @@ const Login = () => {
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
+
+  // 3. Function to toggle password visibility state
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -77,19 +85,45 @@ const Login = () => {
 
             <div className="login-form-group">
               <label className="login-label">Password</label>
-              <div className="login-input-wrapper">
+              <div className="login-input-wrapper" style={{ position: 'relative' }}>
                 <div className="login-input-icon">
                   <Lock size={20} />
                 </div>
                 <input
                   name="password"
-                  type="password"
+                  // 4. Dynamic type based on state
+                  type={showPassword ? "text" : "password"}
                   value={credentials.password}
                   onChange={handleChange}
                   required
                   className="login-input"
                   placeholder="Enter your password"
+                  // Add padding right so text doesn't go under the new eye icon
+                  style={{ paddingRight: '40px' }} 
                 />
+                
+                {/* 5. The Toggle Button */}
+                <button
+                  type="button" // Crucial: prevents form submission on click
+                  onClick={togglePasswordVisibility}
+                  style={{
+                    position: 'absolute',
+                    right: '0',
+                    top: '0',
+                    height: '100%',
+                    padding: '0 10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#a0aec0', // Adjust color to match your theme
+                    zIndex: 2
+                  }}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
             <button
