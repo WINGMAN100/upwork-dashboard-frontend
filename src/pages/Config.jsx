@@ -5,12 +5,13 @@ import { apiService } from '../services/api';
 import { 
   ArrowLeft, Settings, Save, LogOut,
   X, CheckCircle, AlertCircle, Loader2, MousePointerClick, 
-  RefreshCw, List, Globe, Plus
+  RefreshCw, List, Globe, Plus, Info // Ensure Info is imported
 } from 'lucide-react';
 import './Config.css';
 import './Dashboard.css'; 
 
-const TagEditor = ({ title, items, onAdd, onRemove }) => {
+// --- UPDATED TAG EDITOR WITH INFO TOOLTIP ---
+const TagEditor = ({ title, items, onAdd, onRemove, description }) => {
   const [input, setInput] = useState('');
   
   const safeItems = items || []; 
@@ -27,7 +28,16 @@ const TagEditor = ({ title, items, onAdd, onRemove }) => {
   return (
     <div className="tag-editor-card">
       <div className="tag-header">
-        <span className="tag-title">{title}</span>
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <span className="tag-title">{title}</span>
+          {/* Tooltip Wrapper */}
+          {description && (
+            <div className="card-info-wrapper">
+              <Info size={14} className="card-info-icon" />
+              <div className="card-tooltip">{description}</div>
+            </div>
+          )}
+        </div>
         <span className="tag-count">{safeItems.length}</span>
       </div>
       <div className="tag-input-wrapper">
@@ -35,7 +45,7 @@ const TagEditor = ({ title, items, onAdd, onRemove }) => {
         <input 
           type="text" 
           className="tag-input" 
-          placeholder="Type new keyword -> press enter -> click save changes"
+          placeholder="Add new... (Press Enter)"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -57,6 +67,8 @@ const TagEditor = ({ title, items, onAdd, onRemove }) => {
 const KeywordConfig = ({ triggerToast }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+
   const [data, setData] = useState({
     search_keywords: [],
     preferred_keywords: [],
@@ -67,13 +79,38 @@ const KeywordConfig = ({ triggerToast }) => {
   });
   const [originalData, setOriginalData] = useState({});
 
+  // --- UPDATED SECTIONS WITH DESCRIPTIONS ---
   const sections = [
-    { key: 'search_keywords', label: 'Search Keywords' },
-    { key: 'preferred_keywords', label: 'Preferred Keywords' },
-    { key: 'preferred_countries', label: 'Preferred Countries' },
-    { key: 'neutral_countries', label: 'Neutral Countries' },
-    { key: 'preferred_categories', label: 'Preferred Categories' },
-    { key: 'preferred_subcategories', label: 'Preferred Subcategories' }
+    { 
+      key: 'search_keywords', 
+      label: 'Search Keywords', 
+      desc: 'Used to fetch jobs by searching for job title, skill, or keywords iteratively.' 
+    },
+    { 
+      key: 'preferred_keywords', 
+      label: 'Preferred Keywords', 
+      desc: 'Scoring: Title Match = 5 (else 2), Description Match = 5 (else 2). Final Score: 30% Title + 70% Description.' 
+    },
+    { 
+      key: 'preferred_countries', 
+      label: 'Preferred Countries', 
+      desc: 'Matches get 5 rating. If not found, system checks Neutral Countries.' 
+    },
+    { 
+      key: 'neutral_countries', 
+      label: 'Neutral Countries', 
+      desc: 'Matches get 3 rating. Non-matches get 0.' 
+    },
+    { 
+      key: 'preferred_categories', 
+      label: 'Preferred Categories', 
+      desc: 'Match gets 5 rating, else 2.' 
+    },
+    { 
+      key: 'preferred_subcategories', 
+      label: 'Preferred Subcategories', 
+      desc: 'Match gets 5 rating, else 2.' 
+    }
   ];
 
   useEffect(() => {
@@ -158,10 +195,34 @@ const KeywordConfig = ({ triggerToast }) => {
 
   return (
     <div className="keyword-config-container">
+      {/* Global Info Modal Logic remains here if needed, or you can remove it */}
+      {showInfo && (
+        <div className="info-modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="info-modal" onClick={e => e.stopPropagation()}>
+            <div className="info-modal-header">
+              <h3>Scoring Logic Summary</h3>
+              <button className="panel-close-btn" onClick={() => setShowInfo(false)}><X size={20} /></button>
+            </div>
+            <div className="info-modal-content">
+               {/* You can display a summary here or remove the modal entirely since cards have info now */}
+               {sections.map(s => (
+                 <div key={s.key} className="info-section">
+                   <h4>{s.label}</h4>
+                   <p>{s.desc}</p>
+                 </div>
+               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="keyword-actions-bar">
         <div className="info-text">
           <Globe size={16}/>
-          <span>Manage your keywords.</span>
+          <span>Manage global search parameters and preferences.</span>
+          <button className="info-icon-btn" onClick={() => setShowInfo(true)} title="View All Logic">
+            <Info size={16} />
+          </button>
         </div>
         <button className="save-btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? <><Loader2 size={16} className="spin-anim"/> Saving...</> : <><Save size={16}/> Save Changes</>}
@@ -174,6 +235,7 @@ const KeywordConfig = ({ triggerToast }) => {
             key={section.key}
             title={section.label}
             items={data[section.key]}
+            description={section.desc} // Pass description
             onAdd={(val) => handleAdd(section.key, val)}
             onRemove={(val) => handleRemove(section.key, val)}
           />
@@ -183,24 +245,22 @@ const KeywordConfig = ({ triggerToast }) => {
   );
 };
 
-// --- MAIN CONFIG PAGE ---
+// ... (Rest of Config component remains unchanged)
 const Config = () => {
+  // ... keep existing Config component logic ...
+  // ... ensure imports are correct ...
+  // Just returning the skeleton to avoid huge code block repetition
+  // Replace only the KeywordConfig and TagEditor parts above
   const navigate = useNavigate();
-  // Tab State
   const [activeTab, setActiveTab] = useState('prompts'); 
-
-  // Prompts State
   const [prompts, setPrompts] = useState([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncTarget, setSyncTarget] = useState('');
-
-  // Panel State
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [editText, setEditText] = useState('');
   const [savingPrompt, setSavingPrompt] = useState(false);
-
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
@@ -212,7 +272,6 @@ const Config = () => {
   const fetchPrompts = async () => {
     try {
       setLoadingPrompts(true);
-      // Fetch all prompts by default (no query param)
       const data = await generatorService.getPrompts(); 
       setPrompts(data);
     } catch (err) {
@@ -272,7 +331,6 @@ const Config = () => {
 
   return (
     <div className="config-container">
-      {/* Toast */}
       {toast.show && (
         <div className="toast-container">
           <div className={`toast ${toast.type}`}>
@@ -288,7 +346,6 @@ const Config = () => {
         </div>
       )}
 
-      {/* Header */}
       <header className="dashboard-header">
         <div style={{display:'flex', alignItems:'center', gap: 16}}>
           <button onClick={() => navigate('/dashboard')} className="view-btn">
@@ -301,7 +358,6 @@ const Config = () => {
         </button>
       </header>
 
-      {/* --- TABS --- */}
       <div className="config-tabs">
         <button 
           className={`tab-btn ${activeTab === 'prompts' ? 'active' : ''}`}
@@ -317,12 +373,9 @@ const Config = () => {
         </button>
       </div>
 
-      {/* --- TAB CONTENT: PROMPTS --- */}
       {activeTab === 'prompts' && (
         <>
           <div className="config-toolbar">
-            {/* Filter group removed */}
-            
             <div className="sync-group">
               <select value={syncTarget} onChange={(e) => setSyncTarget(e.target.value)} className="config-select" disabled={syncing}>
                 <option value="">Sync All Prompts</option>
@@ -370,14 +423,12 @@ const Config = () => {
         </>
       )}
 
-      {/* --- TAB CONTENT: KEYWORDS --- */}
       {activeTab === 'keywords' && (
         <div className="config-content full-width">
            <KeywordConfig triggerToast={triggerToast} />
         </div>
       )}
 
-      {/* --- SIDE PANEL (Only for Prompts) --- */}
       <div className={`config-side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
       <div className={`config-side-panel ${panelOpen ? 'open' : ''}`}>
         {selectedPrompt && (

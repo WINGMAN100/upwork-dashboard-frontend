@@ -529,6 +529,167 @@ config-toolbar {
 .save-btn-primary:hover:not(:disabled) { background: #1d4ed8; }
 .save-btn-primary:disabled { opacity: 0.7; cursor: not-allowed; background: #94a3b8; }
 
+.info-icon-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-left: 4px;
+}
+
+.info-icon-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* Info Modal Styles */
+.info-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.info-modal {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.info-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.info-modal-content {
+  padding: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-section p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+/* src/pages/Config.css */
+
+/* ... existing styles ... */
+
+/* --- Card Info Tooltip --- */
+.card-info-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Push to right if needed, or keep next to title */
+  cursor: help;
+}
+
+.card-info-icon {
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.card-info-wrapper:hover .card-info-icon {
+  color: #2563eb;
+}
+
+.card-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 240px;
+  background-color: #1e293b;
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 10px 12px;
+  
+  /* Position */
+  position: absolute;
+  z-index: 100;
+  bottom: 140%; /* Above the icon */
+  left: 50%;
+  margin-left: -120px; /* Center horizontally */
+  
+  /* Text */
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+/* Tooltip Arrow */
+.card-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+}
+
+.card-info-wrapper:hover .card-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* Toast (Same as Dashboard) */
 .toast-container { position: fixed; top: 24px; right: 24px; z-index: 2000; animation: slideIn 0.3s ease; }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
