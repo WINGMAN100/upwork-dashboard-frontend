@@ -649,7 +649,7 @@ const Config = () => {
           <button onClick={() => navigate('/dashboard')} className="view-btn">
             <ArrowLeft size={16} /> Back to Dashboard
           </button>
-          <h1 className="dashboard-title">System Configuration</h1>
+          <h1 className="dashboard-title">Configurations</h1>
         </div>
         <button onClick={() => apiService.logout()} className="logout-button">
           <LogOut size={18}/> Logout
