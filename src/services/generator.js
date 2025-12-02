@@ -182,6 +182,32 @@ class GeneratorService {
       body: JSON.stringify(payload)
     });
   }
+  async getRatingConfig() {
+    if (!this.isAuthenticated()) {
+      console.log("Not authenticated, attempting auto-login...");
+      const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+      if (!isLoggedIn) {
+          throw new ApiError('Authentication failed for Search Service', 401);
+      }
+    }
+    return await this.request('/rating_config');
+  }
+
+  async updateRatingConfig(payload) {
+    if (!this.isAuthenticated()) {
+      console.log("Not authenticated, attempting auto-login...");
+      const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+      if (!isLoggedIn) {
+          throw new ApiError('Authentication failed for Search Service', 401);
+      }
+    }
+    const res =  await this.request('/edit_rating_config', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    console.log(res)
+    return res;
+  }
 }
 
 export const generatorService = new GeneratorService();

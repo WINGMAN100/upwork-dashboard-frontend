@@ -679,7 +679,226 @@ config-toolbar {
   visibility: visible;
   opacity: 1;
 }
+.rating-config-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.config-section-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.section-header {
+  padding: 16px 20px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.section-header:hover {
+  background: #f1f5f9;
+}
+
+.section-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.section-body {
+  padding: 20px;
+}
+
+/* Rules Editor */
+/* src/pages/Config.css */
+
+/* ... (Keep layout and header styles) ... */
+
+/* --- RATING CONFIG & RULES --- */
+
+/* Rule Editor Container */
+.rules-container {
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.rules-header {
+  display: flex;
+  background: #f8fafc;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 12px; /* Adds gap between header columns */
+}
+
+.rule-row {
+  display: flex;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9; /* Lighter separator */
+  align-items: center;
+  gap: 12px; /* Adds gap between inputs */
+  background: #fff;
+}
+
+.rule-row:last-child {
+  border-bottom: none;
+}
+
+.rule-input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #334155;
+  background: #fff;
+  height: 38px; /* Fixed height for alignment */
+  box-sizing: border-box;
+}
+
+.rule-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.rule-delete-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444; /* Red */
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rule-delete-btn:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.add-rule-btn {
+  width: 100%;
+  padding: 12px;
+  background: #f8fafc;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.add-rule-btn:hover {
+  background: #eff6ff;
+}
+
+/* --- SIMPLE MATCHES & FORM LAYOUT --- */
+
+/* Wrapper for subsections to add vertical spacing */
+.config-inner-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Increased gap between major blocks */
+}
+
+/* Subsection Box (Country, Category, etc.) */
+.subsection {
+  background: #fff; /* Clean white background */
+  padding: 0; /* Remove padding to let content flow naturally, or keep minimal */
+  border: none; /* Removed border for cleaner look, or keep if you prefer boxes */
+}
+
+/* Section Headings */
+.subsection h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b; /* Darker Slate */
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9; /* Subtle underline */
+  text-transform: none; /* Removed uppercase for softer look */
+  letter-spacing: normal;
+}
+
+/* Input Group Labels */
+.input-group label, 
+.input-row label,
+.config-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b; /* Muted Slate */
+  margin-bottom: 6px;
+}
+
+/* General Inputs */
+.input-group input, 
+.input-row input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+  transition: all 0.2s;
+  height: 40px;
+}
+
+.input-group input:focus,
+.input-row input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+/* Spacing Utilities */
+.mt-4 { margin-top: 24px; } /* Increased margin */
+.mt-2 { margin-top: 16px; }
+
+/* Grid Layouts */
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px; /* Increased gap */
+}
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.capitalize { text-transform: capitalize; }
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
