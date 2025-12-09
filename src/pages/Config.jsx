@@ -610,7 +610,12 @@ const Config = () => {
     if (!selectedPrompt) return;
     setSavingPrompt(true);
     try {
-      await apiService.updatePrompt(selectedPrompt.location, editText);
+      const payload = {
+        prompt_name: selectedPrompt.prompt_name,
+        prompt_lines: editText.split('\n')
+      };
+      
+      await generatorService.updatePrompt(selectedPrompt.location, payload);
       setPrompts(prev => prev.map(p => 
         p.prompt_name === selectedPrompt.prompt_name 
           ? { ...p, prompt_text: editText } 
@@ -681,17 +686,8 @@ const Config = () => {
       {/* --- TAB CONTENT: PROMPTS --- */}
       {activeTab === 'prompts' && (
         <>
-          <div className="config-toolbar">
-            <div className="sync-group">
-              <select value={syncTarget} onChange={(e) => setSyncTarget(e.target.value)} className="config-select" disabled={syncing}>
-                <option value="">Sync All Prompts</option>
-                <option value="main_prompt">Sync Main Prompt</option>
-              </select>
-              <button onClick={handleSync} className="sync-btn" disabled={syncing}>
-                <RefreshCw size={16} className={syncing ? 'spin-anim' : ''} /> {syncing ? 'Syncing...' : 'Sync'}
-              </button>
-            </div>
-          </div>
+          {/* --- MODIFIED HERE: SYNC BUTTON REMOVED --- */}
+          {/* The config-toolbar div was removed here */}
 
           <div className="config-content full-width">
             <div className="config-card">

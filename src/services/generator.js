@@ -134,6 +134,19 @@ class GeneratorService {
         return response.prompts || [];
     }
   }
+  async updatePrompt(location, payload) {
+    if (!this.isAuthenticated()) {
+        console.log("Not authenticated, attempting auto-login...");
+        const isLoggedIn = await this.login(GENERATE_USERNAME, GENERATE_PASSWORD); 
+        if (!isLoggedIn) {
+            throw new ApiError('Authentication failed for Search Service', 401);
+        }
+    }
+    return await this.request('/edit-prompt', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
   async syncPrompts(promptName){
     if (!this.isAuthenticated()) {
         console.log("Not authenticated, attempting auto-login...");
