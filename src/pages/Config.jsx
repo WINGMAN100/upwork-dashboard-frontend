@@ -537,9 +537,11 @@ const Config = () => {
   
   // 1. Initialize State from LocalStorage (Persist on Reload)
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('config_active_tab') || 'prompts';
+    // UPDATED DEFAULT: Default to keywords if prompts is hidden
+    return localStorage.getItem('config_active_tab') || 'keywords';
   });
 
+  /* --- PROMPTS STATE & LOGIC (COMMENTED OUT) ---
   // Prompts State
   const [prompts, setPrompts] = useState([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
@@ -551,13 +553,6 @@ const Config = () => {
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [editText, setEditText] = useState('');
   const [savingPrompt, setSavingPrompt] = useState(false);
-
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
-  // 2. Save to LocalStorage whenever activeTab changes
-  useEffect(() => {
-    localStorage.setItem('config_active_tab', activeTab);
-  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'prompts') {
@@ -588,11 +583,6 @@ const Config = () => {
     } finally {
       setSyncing(false);
     }
-  };
-
-  const triggerToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
   };
 
   const handleRowClick = (prompt) => {
@@ -629,6 +619,19 @@ const Config = () => {
       setSavingPrompt(false);
     }
   };
+  ----------------------------------------------- */
+
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  // 2. Save to LocalStorage whenever activeTab changes
+  useEffect(() => {
+    localStorage.setItem('config_active_tab', activeTab);
+  }, [activeTab]);
+
+  const triggerToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   return (
     <div className="config-container">
@@ -663,18 +666,20 @@ const Config = () => {
 
       {/* --- TABS --- */}
       <div className="config-tabs">
+        {/* --- PROMPTS TAB BUTTON (COMMENTED OUT) ---
         <button 
           className={`tab-btn ${activeTab === 'prompts' ? 'active' : ''}`}
           onClick={() => setActiveTab('prompts')}
         >
           <List size={16} /> Prompts Settings
         </button>
-        <button 
+        */}
+        {/* <button 
           className={`tab-btn ${activeTab === 'keywords' ? 'active' : ''}`}
           onClick={() => setActiveTab('keywords')}
         >
           <Globe size={16} /> Keyword Settings
-        </button>
+        </button> */}
         <button 
           className={`tab-btn ${activeTab === 'rating' ? 'active' : ''}`}
           onClick={() => setActiveTab('rating')}
@@ -683,12 +688,9 @@ const Config = () => {
         </button>
       </div>
 
-      {/* --- TAB CONTENT: PROMPTS --- */}
+      {/* --- TAB CONTENT: PROMPTS (COMMENTED OUT) ---
       {activeTab === 'prompts' && (
         <>
-          {/* --- MODIFIED HERE: SYNC BUTTON REMOVED --- */}
-          {/* The config-toolbar div was removed here */}
-
           <div className="config-content full-width">
             <div className="config-card">
               <div className="table-container">
@@ -724,22 +726,23 @@ const Config = () => {
           </div>
         </>
       )}
+      */}
 
       {/* --- TAB CONTENT: KEYWORDS --- */}
-      {activeTab === 'keywords' && (
+      {/* {activeTab === 'keywords' && (
         <div className="config-content full-width">
            <KeywordConfig triggerToast={triggerToast} />
         </div>
-      )}
+      )} */}
 
-      {/* --- NEW TAB CONTENT: RATING --- */}
+      {/* --- TAB CONTENT: RATING --- */}
       {activeTab === 'rating' && (
         <div className="config-content full-width">
            <RatingConfig triggerToast={triggerToast} />
         </div>
       )}
 
-      {/* --- SIDE PANEL (Only for Prompts) --- */}
+      {/* --- SIDE PANEL (Only for Prompts) (COMMENTED OUT) ---
       <div className={`config-side-panel-overlay ${panelOpen ? 'open' : ''}`} onClick={handleClosePanel}></div>
       <div className={`config-side-panel ${panelOpen ? 'open' : ''}`}>
         {selectedPrompt && (
@@ -763,6 +766,7 @@ const Config = () => {
           </div>
         )}
       </div>
+      */}
     </div>
   );
 };

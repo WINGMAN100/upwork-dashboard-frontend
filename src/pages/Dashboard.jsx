@@ -435,7 +435,7 @@ const Dashboard = () => {
             )}
 
             <button onClick={() => window.location.href = '/generate'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Wand2 size={16}/> Generator</button>
-            <button onClick={() => window.location.href = '/search'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Search size={16}/> Search Links</button>
+            {/* <button onClick={() => window.location.href = '/search'} className="view-btn" style={{background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'}}><Search size={16}/> Search Links</button> */}
             <button onClick={handleRefresh} className="view-btn" title="Refresh Data" disabled={loading} style={{background: '#f8fafc', color: loading ? '#cbd5e1' : '#64748b', border: '1px solid #e2e8f0'}}>
               <RefreshCw size={16} className={loading ? 'spin-anim' : ''} />
             </button>
