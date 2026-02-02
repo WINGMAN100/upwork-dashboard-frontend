@@ -139,7 +139,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [timeFilter, setTimeFilter] = useState('all');
-
+  const [passJobFilter, setPassJobFilter] = useState('');
   // Panel State
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null); 
@@ -170,6 +170,7 @@ const Dashboard = () => {
           setSearchTerm(parsed.searchTerm || '');
           setDebouncedSearch(parsed.searchTerm || '');
           setTimeFilter(parsed.timeFilter || 'all');
+          setPassJobFilter(parsed.passJobFilter || '');
           setLoading(false);
           setTimeout(() => window.scrollTo(0, parsed.scrollTop || 0), 100);
           return true;
@@ -183,8 +184,8 @@ const Dashboard = () => {
     const loadedFromCache = restoreState();
     if (!loadedFromCache) {
       // Fetch both data and count on initial load
-      fetchData(1, '', 'all'); 
-      fetchCount('', 'all');
+      fetchData(1, '', 'all', '');
+      fetchCount('', 'all', '');
     }
     isFirstRun.current = false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -199,6 +200,7 @@ const Dashboard = () => {
         totalCount,
         searchTerm,
         timeFilter,
+        passJobFilter,
         scrollTop: window.scrollY
       };
       sessionStorage.setItem(CACHE_KEY, JSON.stringify(stateToSave));
@@ -211,23 +213,29 @@ const Dashboard = () => {
     const timer = setTimeout(() => {
       if (debouncedSearch !== searchTerm) {
         setDebouncedSearch(searchTerm);
-        handleFilterChange(searchTerm, timeFilter);
+        handleFilterChange(searchTerm, timeFilter,passJobFilter);
       }
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   // Wrapper to handle Filter/Search changes (Resets Page & Fetches Count)
-  const handleFilterChange = (newSearch, newTime) => {
+  const handleFilterChange = (newSearch, newTime, newPassJob) => {
     setPage(1);
-    fetchData(1, newSearch, newTime);
-    fetchCount(newSearch, newTime); // Re-fetch count because filters changed
+    fetchData(1, newSearch, newTime, newPassJob);
+    fetchCount(newSearch, newTime, newPassJob);
   };
 
   const handleTimeFilterChange = (e) => {
     const newVal = e.target.value;
     setTimeFilter(newVal);
     handleFilterChange(debouncedSearch, newVal);
+  };
+  const handlePassJobChange = (e) => {
+    const newVal = e.target.value;
+    setPassJobFilter(newVal);
+    // Pass newVal, but keep current search and time
+    handleFilterChange(debouncedSearch, timeFilter, newVal);
   };
 
   const triggerToast = (message, type = 'success') => {
@@ -237,11 +245,11 @@ const Dashboard = () => {
 
   // --- API CALLS ---
 
-  const fetchCount = async (searchArg, timeArg) => {
+  const fetchCount = async (searchArg, timeArg, passJobArg) => {
     try {
       let result;
-      if (searchArg || timeArg) {
-        result = await apiService.get_count(searchArg, timeArg);
+      if (searchArg || timeArg || passJobArg) {
+        result = await apiService.get_count(searchArg, timeArg, passJobArg);
       }
       else{
         result = await apiService.get_count(); 
@@ -253,10 +261,10 @@ const Dashboard = () => {
     }
   };
 
-  const fetchData = async (pageNum, searchArg = searchTerm, timeArg = timeFilter, forceRefresh = false) => {
+  const fetchData = async (pageNum, searchArg = searchTerm, timeArg = timeFilter, passJobArg = passJobFilter,forceRefresh = false) => {
     if (!forceRefresh) setLoading(true);
     try {
-      const result = await apiService.getProposals(pageNum, LIMIT, searchArg, timeArg);
+      const result = await apiService.getProposals(pageNum, LIMIT, searchArg, timeArg, passJobArg);
       const rows = Array.isArray(result) ? result : (result.data || []);
       
       const uniqueResult = Array.from(new Map(rows.map(item => [item.id, item])).values());
@@ -283,8 +291,8 @@ const Dashboard = () => {
 
   const handleRefresh = () => {
     sessionStorage.removeItem(CACHE_KEY);
-    fetchData(1, searchTerm, timeFilter, false);
-    fetchCount(searchTerm, timeFilter);
+    fetchData(1, searchTerm, timeFilter, passJobFilter, false);
+    fetchCount(searchTerm, timeFilter, passJobFilter);
   };
 
   const handleInputChange = useCallback((id, field, value) => {
@@ -454,6 +462,15 @@ const Dashboard = () => {
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          {/* --- NEW: Pass Job Filter --- */}
+          <div className="filter-wrapper">
+            <Filter size={18} className="filter-icon" />
+            <select className="filter-select" value={passJobFilter} onChange={handlePassJobChange}>
+              <option value="">All Jobs</option>
+              <option value="1">Passed Criteria</option>
+              <option value="0">Skipped/Failed</option>
+            </select>
           </div>
           <div className="filter-wrapper">
             <Filter size={18} className="filter-icon" />

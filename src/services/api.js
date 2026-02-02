@@ -74,13 +74,14 @@ class ApiService {
     return response;
   }
 
- async getProposals(page = 1, limit = 20, search = '', timeFilter = 'all') {
+ async getProposals(page = 1, limit = 20, search = '', timeFilter = 'all', passJob = '') {
   const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
   const timeParam = timeFilter !== 'all' ? `&time_filter=${timeFilter}` : '';
+  const passJobParam = passJob !== '' ? `&pass_job=${passJob}` : '';
   
-  return await this.request(`/dashboard/all?page=${page}&limit=${limit}${searchParam}${timeParam}`);
+  return await this.request(`/dashboard/all?page=${page}&limit=${limit}${searchParam}${timeParam}${passJobParam}`);
 }
-async get_count(search = '', timeFilter = 'all') {
+async get_count(search = '', timeFilter = 'all', passJob = '') {
     const params = new URLSearchParams();
     
     if (search) {
@@ -90,7 +91,9 @@ async get_count(search = '', timeFilter = 'all') {
     if (timeFilter && timeFilter !== 'all') {
       params.append('time_filter', timeFilter);
     }
-    
+    if (passJob !== '') {
+      params.append('pass_job', passJob);
+    }
     const queryString = params.toString();
     return await this.request(`/dashboard/count${queryString ? `?${queryString}` : ''}`);
   }
